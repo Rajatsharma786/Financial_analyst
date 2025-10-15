@@ -1,5 +1,42 @@
+# Environment variables
 .env
+.env.local
+
+# Log files
 newsletter_scheduler.log
+*.log
+
+# CI/CD files with secrets
 ci-cd.yml
+
+# Python cache
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE settings
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Database
+*.db
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
