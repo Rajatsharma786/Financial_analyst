@@ -62,20 +62,20 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Configure Docker for GCR
+      - name: Configure Docker credentials for Artifact Registry
         run: |
-          gcloud auth configure-docker
+          gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.IMAGE_NAME }}:latest .
-          docker tag ${{ env.IMAGE_NAME }}:latest gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker tag ${{ env.IMAGE_NAME }}:latest gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:latest
+          docker build -t financial-analyst:latest .
+          docker tag financial-analyst:latest australia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-repo/financial-analyst:${{ github.sha }}
+          docker tag financial-analyst:latest australia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-repo/financial-analyst:latest
 
-      - name: Push Docker image to GCR
+      - name: Push Docker image
         run: |
-          docker push gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker push gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:latest
+          docker push australia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-repo/financial-analyst:${{ github.sha }}
+          docker push australia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-repo/financial-analyst:latest
 
   deploy:
     name: Deploy to Cloud Run
