@@ -1,0 +1,5 @@
+.env
+newsletter_scheduler.log
+ci-cd.yml
+__pycache__/
+.vscode/
