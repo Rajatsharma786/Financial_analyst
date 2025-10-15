@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import requests
 import pandas as pd
-import logging
 import re 
 import os
 from IPython.display import display, Markdown
@@ -21,28 +20,8 @@ import auth
 from auth import SessionManager, require_auth
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Initialize OpenBB login with error handling
-def initialize_openbb():
-    """Initialize OpenBB with PAT token"""
-    try:
-        openbb_pat = os.getenv('OPENBB_PAT')
-        if openbb_pat:
-            obb.account.login(pat=openbb_pat)
-            logger.info("OpenBB initialized successfully")
-        else:
-            logger.warning("OPENBB_PAT not found, some features may be limited")
-    except Exception as e:
-        logger.error(f"Failed to initialize OpenBB: {e}")
-        st.warning("OpenBB initialization failed. Some features may be limited.")
-
-# Call initialization
-initialize_openbb()
+OPENBB_PAT = os.getenv("OPENBB_PAT")
+obb.account.login(pat=OPENBB_PAT)
 
 @tool
 def get_stock_ticker_symbol(stock_name: str) -> str:

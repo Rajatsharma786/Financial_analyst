@@ -62,7 +62,12 @@ class DatabaseManager:
         """
         
         try:
-            with self.get_connection() as conn:
+            conn = self.get_connection()
+            if conn is None:
+                logger.error("Cannot create users table: Database connection is None")
+                return
+            
+            with conn:
                 with conn.cursor() as cursor:
                     cursor.execute(create_table_query)
                     conn.commit()
@@ -118,7 +123,11 @@ class UserManager:
             RETURNING id, username, email, created_at, signed_up_for_newsletter, fav_stocks
             """
             
-            with self.db.get_connection() as conn:
+            conn = self.db.get_connection()
+            if conn is None:
+                return {"success": False, "message": "Database connection failed. Please try again later."}
+            
+            with conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                     cursor.execute(insert_query, (username, email, password_hash, salt, signed_up_for_newsletter, fav_stocks))
                     user_data = cursor.fetchone()
@@ -143,7 +152,11 @@ class UserManager:
             WHERE username = %s AND is_active = TRUE
             """
             
-            with self.db.get_connection() as conn:
+            conn = self.db.get_connection()
+            if conn is None:
+                return {"success": False, "message": "Database connection failed. Please try again later."}
+            
+            with conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                     cursor.execute(select_query, (username,))
                     user_data = cursor.fetchone()
@@ -185,7 +198,12 @@ class UserManager:
             WHERE username = %s OR email = %s
             """
             
-            with self.db.get_connection() as conn:
+            conn = self.db.get_connection()
+            if conn is None:
+                logger.error("Cannot check user existence: Database connection is None")
+                return False
+            
+            with conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                     cursor.execute(check_query, (username, email))
                     result = cursor.fetchone()

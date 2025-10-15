@@ -109,6 +109,11 @@ jobs:
             --timeout 300 \
             --set-secrets OPENAI_API_KEY=OPENAI_API_KEY:latest,MARKETAUX_API_KEY=MARKETAUX_API_KEY:latest,OPENBB_PAT=OPENBB_PAT:latest,EMAIL_SENDER=EMAIL_SENDER:latest,EMAIL_PASSWORD=EMAIL_PASSWORD:latest,SMTP_SERVER=SMTP_SERVER:latest,SMTP_PORT=SMTP_PORT:latest,AZURE_POSTGRES_PASSWORD=AZURE_POSTGRES_PASSWORD:latest
 
+      - name: Verify secrets are mounted
+        run: |
+          echo "Checking Cloud Run service configuration..."
+          gcloud run services describe ${{ env.SERVICE_NAME }} --platform managed --region ${{ env.GCR_REGION }} --format=json | grep -A 20 "env"
+
       - name: Show deployment URL
         run: |
           gcloud run services describe ${{ env.SERVICE_NAME }} --platform managed --region ${{ env.GCR_REGION }} --format 'value(status.url)'
