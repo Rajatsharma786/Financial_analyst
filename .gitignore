@@ -37,3 +37,5 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+.github\workflows\ci-cd.yml
