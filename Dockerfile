@@ -13,13 +13,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only requirements first to leverage Docker cache
-COPY Requirements.txt .
+COPY requirements.txt .
 
 # Create virtual environment and install dependencies
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r Requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime stage
 FROM python:3.11-slim
