@@ -21,6 +21,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Pre-build openbb extensions to avoid runtime issues
+RUN python -c "import openbb; print('OpenBB initialized successfully')" || true
+
 # Stage 2: Runtime stage
 FROM python:3.11-slim
 
@@ -41,12 +44,16 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     STREAMLIT_SERVER_PORT=8501 \
-    STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    OPENBB_DISABLE_AUTO_BUILD=true \
+    OPENBB_DISABLE_INTERACTIVE=true
 
-# Create non-root user for security
+# Create non-root user and set up permissions
 RUN useradd -m -u 1000 appuser && \
+    mkdir -p /home/appuser/.openbb && \
     chown -R appuser:appuser /app && \
-    chown -R appuser:appuser /opt/venv
+    chown -R appuser:appuser /opt/venv && \
+    chown -R appuser:appuser /home/appuser
 
 # Copy application files
 COPY --chown=appuser:appuser app.py .
@@ -54,8 +61,6 @@ COPY --chown=appuser:appuser auth.py .
 COPY --chown=appuser:appuser user_profile.py .
 COPY --chown=appuser:appuser email_util.py .
 COPY --chown=appuser:appuser scheduler.py .
-# NOTE: .env file is NOT copied for security reasons
-# Pass environment variables at runtime using --env-file or cloud secrets
 
 # Switch to non-root user
 USER appuser
