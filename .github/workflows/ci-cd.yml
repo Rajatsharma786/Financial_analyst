@@ -107,7 +107,7 @@ jobs:
             --memory 2Gi \
             --cpu 2 \
             --timeout 300 \
-            --clear-secrets \
+            --remove-secrets OPENAI_API_KEY,MARKETAUX_API_KEY,OPENBB_PAT,EMAIL_SENDER,EMAIL_PASSWORD,SMTP_SERVER,SMTP_PORT,AZURE_POSTGRES_PASSWORD \
             --set-env-vars "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},MARKETAUX_API_KEY=${{ secrets.MARKETAUX_API_KEY }},OPENBB_PAT=${{ secrets.OPENBB_PAT }},EMAIL_SENDER=${{ secrets.EMAIL_SENDER }},EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }},SMTP_SERVER=${{ secrets.SMTP_SERVER }},SMTP_PORT=${{ secrets.SMTP_PORT }},AZURE_POSTGRES_PASSWORD=${{ secrets.AZURE_POSTGRES_PASSWORD }}"
 
       - name: Verify secrets are mounted
