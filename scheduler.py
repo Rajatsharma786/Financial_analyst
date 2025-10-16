@@ -95,23 +95,27 @@ async def health_check():
 
 
 @app.post("/send-newsletter")
-async def trigger_newsletter(background_tasks: BackgroundTasks):
+async def trigger_newsletter():
     """
     Endpoint to trigger newsletter sending.
     This endpoint should be called by Google Cloud Scheduler.
+    Runs synchronously and waits for completion before returning 200 OK.
     """
     try:
         logger.info("Newsletter trigger received from Cloud Scheduler")
         
-        # Run the newsletter job in the background
-        background_tasks.add_task(send_newsletter_job)
+        # Run the newsletter job synchronously (not in background)
+        # This ensures it completes before the container shuts down
+        result = send_newsletter_job()
         
+        # Return 200 OK to indicate successful completion
         return JSONResponse(
-            status_code=202,
+            status_code=200,
             content={
-                "status": "accepted",
-                "message": "Newsletter sending process started",
-                "timestamp": datetime.now(AEST).strftime('%Y-%m-%d %H:%M:%S %Z')
+                "status": "success",
+                "message": "Newsletter sending process completed successfully",
+                "timestamp": datetime.now(AEST).strftime('%Y-%m-%d %H:%M:%S %Z'),
+                "result": result
             }
         )
         
@@ -120,30 +124,6 @@ async def trigger_newsletter(background_tasks: BackgroundTasks):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to trigger newsletter: {str(e)}"
-        )
-
-
-@app.post("/send-newsletter-sync")
-async def trigger_newsletter_sync():
-    """
-    Synchronous endpoint to trigger newsletter sending.
-    This endpoint waits for the newsletter to be sent before returning.
-    Use this for testing or when you need confirmation of completion.
-    """
-    try:
-        logger.info("Synchronous newsletter trigger received")
-        result = send_newsletter_job()
-        
-        return JSONResponse(
-            status_code=200,
-            content=result
-        )
-        
-    except Exception as e:
-        logger.error(f"Failed to send newsletter: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to send newsletter: {str(e)}"
         )
 
 

@@ -183,14 +183,8 @@ tools = [get_stock_ticker_symbol,
          get_stock_news,
          get_general_market_data]
          
-# Check if env variables for email notifications are set
-has_email_config = all([
-    os.getenv('EMAIL_SENDER'),
-    os.getenv('EMAIL_PASSWORD'),
-    os.getenv('SMTP_SERVER')
-])
-if not has_email_config:
-    st.sidebar.warning("Email configuration not set. Newsletter functionality will be limited.")
+# Email configuration is handled by the scheduler service
+# No need to check email config in the Streamlit app
 
 AGENT_PREFIX = """Role: You are an AI stock market assistant tasked with providing investors
 with up-to-date, detailed information on individual stocks or advice based on general market data.
