@@ -20,8 +20,22 @@ import auth
 from auth import SessionManager, require_auth
 load_dotenv()
 
-OPENBB_PAT = os.getenv("OPENBB_PAT")
-obb.account.login(pat=OPENBB_PAT)
+# Initialize OpenBB with error handling and caching
+@st.cache_resource
+def init_openbb():
+    """Initialize OpenBB account login (cached to avoid rate limits)"""
+    try:
+        OPENBB_PAT = os.getenv("OPENBB_PAT")
+        if OPENBB_PAT:
+            obb.account.login(pat=OPENBB_PAT)
+            return True
+    except Exception as e:
+        st.warning(f"OpenBB initialization warning: {str(e)}. Some features may be limited.")
+        return False
+    return False
+
+# Initialize OpenBB once
+init_openbb()
 
 @tool
 def get_stock_ticker_symbol(stock_name: str) -> str:
