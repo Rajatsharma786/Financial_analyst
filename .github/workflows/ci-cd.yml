@@ -14,8 +14,10 @@ on:
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCR_REGION: australia-southeast1
-  SERVICE_NAME: financial-analyst
-  IMAGE_NAME: financial-analyst
+  STREAMLIT_SERVICE_NAME: financial-analyst
+  SCHEDULER_SERVICE_NAME: financial-analyst-scheduler
+  STREAMLIT_IMAGE_NAME: financial-analyst-streamlit
+  SCHEDULER_IMAGE_NAME: financial-analyst-scheduler
 
 jobs:
   test:
@@ -67,16 +69,27 @@ jobs:
         run: |
           gcloud auth configure-docker gcr.io
 
-      - name: Build Docker image
+      - name: Build Docker images
         run: |
-          docker build -t financial-analyst:latest .
-          docker tag financial-analyst:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst:${{ github.sha }}
-          docker tag financial-analyst:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst:latest
+          # Build Streamlit app image
+          docker build -f Dockerfile.streamlit -t financial-analyst-streamlit:latest .
+          docker tag financial-analyst-streamlit:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-streamlit:${{ github.sha }}
+          docker tag financial-analyst-streamlit:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-streamlit:latest
+          
+          # Build Scheduler API image
+          docker build -f Dockerfile.scheduler -t financial-analyst-scheduler:latest .
+          docker tag financial-analyst-scheduler:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-scheduler:${{ github.sha }}
+          docker tag financial-analyst-scheduler:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-scheduler:latest
 
-      - name: Push Docker image to GCR
+      - name: Push Docker images to GCR
         run: |
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst:${{ github.sha }}
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst:latest
+          # Push Streamlit image
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-streamlit:${{ github.sha }}
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-streamlit:latest
+          
+          # Push Scheduler image
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-scheduler:${{ github.sha }}
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/financial-analyst-scheduler:latest
 
   deploy:
     name: Deploy to Cloud Run
@@ -98,15 +111,15 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
-          # Delete existing service to clear all old configurations
-          gcloud run services delete ${{ env.SERVICE_NAME }} \
+          # Deploy Streamlit Service (Main App)
+          echo "Deploying Streamlit service..."
+          gcloud run services delete ${{ env.STREAMLIT_SERVICE_NAME }} \
             --platform managed \
             --region ${{ env.GCR_REGION }} \
             --quiet || true
           
-          # Deploy fresh service with environment variables
-          gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          gcloud run deploy ${{ env.STREAMLIT_SERVICE_NAME }} \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.STREAMLIT_IMAGE_NAME }}:${{ github.sha }} \
             --platform managed \
             --region ${{ env.GCR_REGION }} \
             --allow-unauthenticated \
@@ -114,13 +127,29 @@ jobs:
             --memory 2Gi \
             --cpu 2 \
             --timeout 300 \
+            --set-env-vars "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},MARKETAUX_API_KEY=${{ secrets.MARKETAUX_API_KEY }},OPENBB_PAT=${{ secrets.OPENBB_PAT }},AZURE_POSTGRES_PASSWORD=${{ secrets.AZURE_POSTGRES_PASSWORD }}"
+          
+          # Deploy Scheduler Service (Newsletter API)
+          echo "Deploying Scheduler service..."
+          gcloud run services delete ${{ env.SCHEDULER_SERVICE_NAME }} \
+            --platform managed \
+            --region ${{ env.GCR_REGION }} \
+            --quiet || true
+          
+          gcloud run deploy ${{ env.SCHEDULER_SERVICE_NAME }} \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.SCHEDULER_IMAGE_NAME }}:${{ github.sha }} \
+            --platform managed \
+            --region ${{ env.GCR_REGION }} \
+            --allow-unauthenticated \
+            --port 8000 \
+            --memory 1Gi \
+            --cpu 1 \
+            --timeout 300 \
             --set-env-vars "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},MARKETAUX_API_KEY=${{ secrets.MARKETAUX_API_KEY }},OPENBB_PAT=${{ secrets.OPENBB_PAT }},EMAIL_SENDER=${{ secrets.EMAIL_SENDER }},EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }},SMTP_SERVER=${{ secrets.SMTP_SERVER }},SMTP_PORT=${{ secrets.SMTP_PORT }},AZURE_POSTGRES_PASSWORD=${{ secrets.AZURE_POSTGRES_PASSWORD }}"
 
-      - name: Verify secrets are mounted
+      - name: Show deployment URLs
         run: |
-          echo "Checking Cloud Run service configuration..."
-          gcloud run services describe ${{ env.SERVICE_NAME }} --platform managed --region ${{ env.GCR_REGION }} --format=json | grep -A 20 "env"
-
-      - name: Show deployment URL
-        run: |
-          gcloud run services describe ${{ env.SERVICE_NAME }} --platform managed --region ${{ env.GCR_REGION }} --format 'value(status.url)'
+          echo "Streamlit App URL:"
+          gcloud run services describe ${{ env.STREAMLIT_SERVICE_NAME }} --platform managed --region ${{ env.GCR_REGION }} --format 'value(status.url)'
+          echo "Scheduler API URL:"
+          gcloud run services describe ${{ env.SCHEDULER_SERVICE_NAME }} --platform managed --region ${{ env.GCR_REGION }} --format 'value(status.url)'
