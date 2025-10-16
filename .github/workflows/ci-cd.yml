@@ -107,8 +107,7 @@ jobs:
             --memory 2Gi \
             --cpu 2 \
             --timeout 300 \
-            --service-account 898280458899-compute@developer.gserviceaccount.com \
-            --update-secrets OPENAI_API_KEY=OPENAI_API_KEY:latest,MARKETAUX_API_KEY=MARKETAUX_API_KEY:latest,OPENBB_PAT=OPENBB_PAT:latest,EMAIL_SENDER=EMAIL_SENDER:latest,EMAIL_PASSWORD=EMAIL_PASSWORD:latest,SMTP_SERVER=SMTP_SERVER:latest,SMTP_PORT=SMTP_PORT:latest,AZURE_POSTGRES_PASSWORD=AZURE_POSTGRES_PASSWORD:latest
+            --set-env-vars "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},MARKETAUX_API_KEY=${{ secrets.MARKETAUX_API_KEY }},OPENBB_PAT=${{ secrets.OPENBB_PAT }},EMAIL_SENDER=${{ secrets.EMAIL_SENDER }},EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }},SMTP_SERVER=${{ secrets.SMTP_SERVER }},SMTP_PORT=${{ secrets.SMTP_PORT }},AZURE_POSTGRES_PASSWORD=${{ secrets.AZURE_POSTGRES_PASSWORD }}"
 
       - name: Verify secrets are mounted
         run: |
