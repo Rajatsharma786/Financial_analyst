@@ -98,6 +98,13 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
+          # Delete existing service to clear all old configurations
+          gcloud run services delete ${{ env.SERVICE_NAME }} \
+            --platform managed \
+            --region ${{ env.GCR_REGION }} \
+            --quiet || true
+          
+          # Deploy fresh service with environment variables
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             --platform managed \
@@ -107,7 +114,6 @@ jobs:
             --memory 2Gi \
             --cpu 2 \
             --timeout 300 \
-            --remove-secrets OPENAI_API_KEY,MARKETAUX_API_KEY,OPENBB_PAT,EMAIL_SENDER,EMAIL_PASSWORD,SMTP_SERVER,SMTP_PORT,AZURE_POSTGRES_PASSWORD \
             --set-env-vars "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},MARKETAUX_API_KEY=${{ secrets.MARKETAUX_API_KEY }},OPENBB_PAT=${{ secrets.OPENBB_PAT }},EMAIL_SENDER=${{ secrets.EMAIL_SENDER }},EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }},SMTP_SERVER=${{ secrets.SMTP_SERVER }},SMTP_PORT=${{ secrets.SMTP_PORT }},AZURE_POSTGRES_PASSWORD=${{ secrets.AZURE_POSTGRES_PASSWORD }}"
 
       - name: Verify secrets are mounted
