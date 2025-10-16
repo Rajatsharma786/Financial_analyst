@@ -66,11 +66,11 @@ COPY --chown=appuser:appuser scheduler.py .
 USER appuser
 
 # Expose Streamlit port
-EXPOSE 8501
+EXPOSE 8501 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8501/_stcore/health || exit 1
 
 # Default command to run Streamlit app
-CMD ["streamlit", "run", "app.py", "--server.headless", "true", "--server.enableCORS", "false", "--server.enableXsrfProtection", "false"]
+CMD ["sh", "-c", "uvicorn scheduler:app --host 0.0.0.0 --port 8000 & streamlit run app.py --server.headless true --server.enableCORS false --server.enableXsrfProtection false"]

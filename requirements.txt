@@ -14,3 +14,5 @@ pytz>=2024.1
 requests
 pandas
 ipython>=8.0.0
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
