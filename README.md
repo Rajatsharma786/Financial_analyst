@@ -9,6 +9,10 @@ An AI-powered financial analyst assistant that helps users analyze stocks and ge
 - **Newsletter Subscription**: Users can subscribe to a daily newsletter with updates on their favorite stocks
 - **User Profiles**: Users can manage their favorite stocks and newsletter preferences
 
+# Architecture
+<img width="3122" height="6531" alt="financial_analyst_flow" src="https://github.com/user-attachments/assets/e446d25f-2507-45e5-aa23-22bfd92b1947" />
+
+
 ## Installation
 
 1. Clone this repository
